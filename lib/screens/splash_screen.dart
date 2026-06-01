@@ -3,10 +3,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show timeDilation;
-import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Syrn Splash Screen – Premium, animated, fashion‑editorial style.
 class SplashScreen extends StatefulWidget {
@@ -70,10 +69,18 @@ class _SplashScreenState extends State<SplashScreen>
     // Start the animation immediately
     _controller.forward();
 
-    // Timer for 3 seconds → navigate to /login
-    _timer = Timer(const Duration(seconds: 3), () {
+    // Timer for 3 seconds → check session and navigate
+    _timer = Timer(const Duration(seconds: 3), () async {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/login');
+        final prefs = await SharedPreferences.getInstance();
+        final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+        if (mounted) {
+          if (isLoggedIn) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          } else {
+            Navigator.of(context).pushReplacementNamed('/login');
+          }
+        }
       }
     });
   }

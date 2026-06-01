@@ -2,7 +2,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -24,11 +23,6 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
   int? _attemptsLeft;
 
-  // 🔁 Replace with your actual backend URL
-  final String _loginUrl = 'http://10.0.2.2/Syrn/login.php'; // Android emulator localhost
-  // For iOS simulator: 'http://localhost/syrn_backend/login.php'
-  // For real device: your LAN IP or ngrok
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -46,17 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse(_loginUrl),
-        body: {
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text,
-        },
+      final result = await ApiService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
 
-      final Map<String, dynamic> data = json.decode(response.body);
-
-      if (response.statusCode == 200 && data['status'] == 'success') {
+      if (result['success']) {
+        final data = result['data'];
         // ✅ Login successful – save session
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user', json.encode(data['user']));
@@ -65,28 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/home');
         }
-      }
-      else if (response.statusCode == 401) {
-        // Invalid password
+      } else {
         setState(() {
-          _errorMessage = data['message'];
-          _attemptsLeft = data['attempts_left'];
-        });
-      }
-      else if (response.statusCode == 403) {
-        // Account locked
-        setState(() {
-          _errorMessage = data['message'];
-        });
-      }
-      else if (response.statusCode == 400) {
-        setState(() {
-          _errorMessage = data['message'];
-        });
-      }
-      else {
-        setState(() {
-          _errorMessage = 'Something went wrong. Please try again.';
+          _errorMessage = result['message'];
+          _attemptsLeft = result['attempts_left'];
         });
       }
     } catch (e) {
@@ -248,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-                      // Navigate to sign-up screen (to be implemented)
+                      Navigator.pushNamed(context, '/signup');
                     },
                     child: Text(
                       'CREATE AN ACCOUNT',

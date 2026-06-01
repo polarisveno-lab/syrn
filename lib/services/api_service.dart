@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class ApiService {
 
   static const String baseUrl =
-      'http://10.0.2.2/Syrn';
+      'http://10.0.2.2/syrn_api';
 
   /* REGISTER */
   static Future<Map<String, dynamic>> register(
@@ -20,7 +20,7 @@ class ApiService {
 
       final response = await http.post(
 
-        Uri.parse('$baseUrl/register.php'),
+        Uri.parse('$baseUrl/signup.php'),
 
         headers: {
           'Content-Type':
@@ -94,7 +94,8 @@ class ApiService {
 
       return {
         'success': false,
-        'message': data['message'],
+        'message': data['message'] ?? 'Login failed',
+        'attempts_left': data['attempts_left'],
       };
 
     } catch (e) {
